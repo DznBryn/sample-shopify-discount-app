@@ -13,7 +13,7 @@ import { DiscountApplicationStrategy } from "../generated/api";
  * @type {FunctionRunResult}
  */
 const EMPTY_DISCOUNT = {
-  discountApplicationStrategy: DiscountApplicationStrategy.First,
+  discountApplicationStrategy: DiscountApplicationStrategy.All,
   discounts: [],
 };
 
@@ -26,11 +26,9 @@ export function run(input) {
    * @type {[{
    *   quantity: number
    *   percentage: number
-   *   productVariants: {
+   *   selection: {
    *    id: string
-   *    size: number
-   *    variants: any
-   *    selectedVariants: string[]
+   *   variants: {id: String}[]
    *  }[]
    * }]}
    */
@@ -39,16 +37,20 @@ export function run(input) {
   );
 
   configurations.forEach((configuration) => {
-    if (!configuration.quantity || !configuration.percentage) {
+    if (
+      !configuration.quantity ||
+      !configuration.percentage ||
+      configuration.selection.length === 0
+    ) {
       return EMPTY_DISCOUNT;
     }
   });
 
   function extractSelectedVariants(data) {
-    const selectedVariants = data.productVariants.flatMap((productVariant) =>
-      productVariant.selectedVariants.map((variantId) => ({
+    const selectedVariants = data.selection.flatMap((product) =>
+      product.variants.flatMap((variant) => ({
         productVariant: {
-          id: variantId,
+          id: String(variant.id),
         },
       }))
     );
@@ -56,7 +58,7 @@ export function run(input) {
     return {
       quantity: data.quantity,
       percentage: data.percentage,
-      selectedVariants: selectedVariants,
+      selectedVariants,
     };
   }
 

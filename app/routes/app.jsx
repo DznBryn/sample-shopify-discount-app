@@ -8,8 +8,9 @@ import { boundary } from "@shopify/shopify-app-remix/server";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
 
 import { authenticate } from "../shopify.server";
+import styles from '../styles/style.css'
 
-export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
+export const links = () => [{ rel: "stylesheet", href: polarisStyles }, { rel: "stylesheet", href: styles }];
 
 export async function loader({ request }) {
   await authenticate.admin(request);
@@ -34,7 +35,7 @@ export default function App() {
             <Link to="/app" rel="home">
               Home
             </Link>
-            <Link to="/app/additional">Additional page</Link>
+            <Link to="/app/product-with-purchase">Purchase Rewards</Link>
           </ui-nav-menu>
           <Outlet />
         </DiscountProvider>

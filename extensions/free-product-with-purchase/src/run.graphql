@@ -1,0 +1,27 @@
+query RunInput {
+  cart {
+    lines {
+      id
+      quantity
+      cost {
+        amountPerQuantity {
+          amount
+          currencyCode
+        }
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          title
+          component_reference: metafield(
+            namespace: "custom"
+            key: "component_reference"
+          ) {
+            value
+          }
+        }
+      }
+    }
+  }
+}

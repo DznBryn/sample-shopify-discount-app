@@ -3,8 +3,9 @@ import { renderToPipeableStream } from "react-dom/server";
 import { Response } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
-
 import { addDocumentResponseHeaders } from "./shopify.server";
+require('dotenv').config();
+
 
 const ABORT_DELAY = 5_000;
 

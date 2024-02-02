@@ -28,31 +28,16 @@ import {
   Page,
   PageActions,
   VerticalStack,
-  Box,
-  Button,
 } from "@shopify/polaris";
 
 import shopify from "../shopify.server";
 import { NotFoundPage } from "../components/NotFoundPage";
-import { DiscountVariant } from "./app.volume-discount.$functionId.new";
-import { GET_PRODUCTS, GET_PRODUCT_BY_ID } from "~/utils/graphql/queries/products";
+import { DiscountVariant } from "../components/DiscountVariants";
 
-// This is a server-side action that is invoked when the form is submitted.
-// It makes an admin GraphQL request to update a discount.
 export const action = async ({ params, request }) => {
   const { id, functionId } = params;
   const { admin } = await shopify.authenticate.admin(request);
   const formData = await request.formData();
-
-  if (formData.get("cartAction") === "GET_PRODUCT_VARIANT") {
-    const response = await admin.graphql(GET_PRODUCT_BY_ID, {
-      variables: {
-        id: formData.get("id"),
-      },
-    });
-    const responseJson = await response.json();
-    return json({ redirect: false, id: responseJson?.data?.product?.id ?? "", variants: responseJson?.data?.product?.variants ?? [], errors: [] })
-  }
 
   const {
     title,
@@ -73,7 +58,7 @@ export const action = async ({ params, request }) => {
     endsAt: endsAt && new Date(endsAt),
   };
 
-  if (formData.get("cartAction") === "SUBMIT_DISCOUNT") {
+  if (formData.get("formAction") === "SUBMIT_DISCOUNT") {
     if (method === DiscountMethod.Code) {
       const baseCodeDiscount = {
         ...baseDiscount,
@@ -102,10 +87,7 @@ export const action = async ({ params, request }) => {
               metafields: [
                 {
                   id: configuration.metafieldId,
-                  value: JSON.stringify([{
-                    quantity: configuration.quantity,
-                    percentage: configuration.percentage,
-                  }]),
+                  value: JSON.stringify(configuration.data),
                 },
               ],
             },
@@ -153,7 +135,6 @@ export const action = async ({ params, request }) => {
 
   return json({ redirect: false, errors: [] });
 };
-
 
 export const loader = async ({ params, request }) => {
   try {
@@ -242,10 +223,10 @@ export const loader = async ({ params, request }) => {
     )?.map((config) => {
       return {
         percentage: config.percentage,
-        productVariants: config.productVariants,
+        selection: config.selection,
       };
     });
-
+  
     const discount = {
       title,
       method,
@@ -261,23 +242,34 @@ export const loader = async ({ params, request }) => {
       },
     };
 
-    const productsQuery = await admin.graphql(GET_PRODUCTS, {
-      variables: {
-        first: 50,
-      }
-    });
-    const productsJson = await productsQuery.json();
-    const products = productsJson?.data?.products.edges ?? [];
-    console.log("PRODUCTS ==============> ", discount);
-    return json({ products, discount, error:[] });
+    return json({ discount, error: [] });
   } catch (error) {
+    const discount = {
+      title: '',
+      method: 'Code',
+      code: '',
+      combinesWith: {
+        orderDiscounts: false,
+        productDiscounts: true,
+        shippingDiscounts: false,
+      },
+      usageLimit: null,
+      appliesOncePerCustomer: false,
+      startsAt: new Date(),
+      endsAt: null,
+      configuration: [
+        {
+          percentage: "0",
+          selection: [],
+        }
+      ],
+    }
     console.error("Error on Edit Discount Variant", error);
-    return json({ products: [], error });
+    return json({ discount, error });
   }
 };
 
-// This is the React component for the page.
-export default function VolumeEdit() {
+export default function DiscountVariantsEdit() {
   const submitForm = useSubmit();
   const actionData = useActionData();
   const { discount } = useLoaderData();
@@ -292,7 +284,7 @@ export default function VolumeEdit() {
   const [configurations, setConfigurations] = useState(discount.configuration.data ?? [
     {
       percentage: 0,
-      productVariants: [],
+      selection: [],
     },
   ]);
 
@@ -301,7 +293,7 @@ export default function VolumeEdit() {
   }, []);
 
   const { metafieldId } = discount.configuration;
-  
+
   const {
     fields: {
       discountTitle,
@@ -318,7 +310,7 @@ export default function VolumeEdit() {
     submit,
   } = useForm({
     fields: {
-      cartAction: useField("SUBMIT_DISCOUNT"),
+      formAction: useField("SUBMIT_DISCOUNT"),
       discountTitle: useField(discount.title),
       discountMethod: useField(discount.method),
       discountCode: useField(discount.code),
@@ -334,13 +326,13 @@ export default function VolumeEdit() {
         data: configurations.map((config) => {
           return {
             percentage: useField(config.percentage),
-            productVariants: useField(config.productVariants),
+            selection: useField(config.selection),
           }
         })
       },
     },
     onSubmit: async (form) => {
-      const cartAction = "SUBMIT_DISCOUNT"
+      const formAction = "SUBMIT_DISCOUNT"
       const discount = {
         title: form.discountTitle,
         method: form.discountMethod,
@@ -355,13 +347,13 @@ export default function VolumeEdit() {
           data: configurations.map((config) => {
             return {
               percentage: config.percentage,
-              productVariants: config.productVariants,
+              selection: config.selection,
             }
           })
         },
       };
 
-      submitForm({ cartAction, discount: JSON.stringify(discount) }, { method: "post" });
+      submitForm({ formAction, discount: JSON.stringify(discount) }, { method: "post" });
 
       return { status: "success" };
     },
@@ -397,12 +389,9 @@ export default function VolumeEdit() {
       </Layout.Section>
     ) : null;
 
-  
-
   return (
-    // Render a discount form using Polaris components and the discount app components
     <Page
-      title="Create volume discount"
+      title="Edit discount variant"
       backAction={{
         content: "Discounts",
         onAction: () => onBreadcrumbAction(redirect, true),
@@ -419,7 +408,7 @@ export default function VolumeEdit() {
           <Form method="post">
             <VerticalStack align="space-around" gap="5">
               <MethodCard
-                title="Volume"
+                title="Type"
                 discountTitle={discountTitle}
                 discountClass={DiscountClass.Product}
                 discountCode={discountCode}
@@ -427,7 +416,7 @@ export default function VolumeEdit() {
               />
               {
                 configurations.map((config, index) => {
-                  return <DiscountVariant key={index} configuration={config} configurations={configurations} configIndex={index} onChange={handleUpdateConfiguration} />
+                  return <DiscountVariant key={index} configuration={config} configurations={configurations} configIndex={index} onChange={handleUpdateConfiguration} showButtons={false} />
                 })
               }
 

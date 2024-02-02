@@ -1,7 +1,7 @@
 api_version = "2024-01"
 
 [[extensions]]
-handle = "product-discount-js"
+handle = "discount-variant"
 name = "t:name"
 description = "t:description"
 type = "function"
@@ -16,5 +16,5 @@ type = "function"
   path = "dist/function.wasm"
 
   [extensions.ui.paths]
-  create = "/app/volume-discount/:functionId/new"
-  details = "/app/volume-discount/:functionId/:id"
+  create = "/app/discount-variants/:functionId/new"
+  details = "/app/discount-variants/:functionId/:id"

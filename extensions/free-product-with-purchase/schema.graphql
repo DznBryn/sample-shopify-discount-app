@@ -73,114 +73,9 @@ type Cart {
   buyerIdentity: BuyerIdentity
 
   """
-  The costs that the buyer will pay at checkout.
-  """
-  cost: CartCost!
-
-  """
-  A list of lines containing information about the items that can be delivered.
-  """
-  deliverableLines: [DeliverableCartLine!]!
-
-  """
-  The delivery groups available for the cart based on the buyer's shipping address.
-  """
-  deliveryGroups: [CartDeliveryGroup!]!
-
-  """
   A list of lines containing information about the items the customer intends to purchase.
   """
   lines: [CartLine!]!
-}
-
-"""
-The cost that the buyer will pay at checkout.
-"""
-type CartCost {
-  """
-  The amount, before taxes and discounts, for the customer to pay.
-  """
-  subtotalAmount: MoneyV2!
-
-  """
-  The total amount for the customer to pay.
-  """
-  totalAmount: MoneyV2!
-
-  """
-  The duty amount for the customer to pay at checkout.
-  """
-  totalDutyAmount: MoneyV2
-
-  """
-  The tax amount for the customer to pay at checkout.
-  """
-  totalTaxAmount: MoneyV2
-}
-
-"""
-Information about the options available for one or more line items to be delivered to a specific address.
-"""
-type CartDeliveryGroup {
-  """
-  A list of cart lines for the delivery group.
-  """
-  cartLines: [CartLine!]!
-
-  """
-  The destination address for the delivery group.
-  """
-  deliveryAddress: MailingAddress
-
-  """
-  The delivery options available for the delivery group.
-  """
-  deliveryOptions: [CartDeliveryOption!]!
-
-  """
-  Unique identifier for the delivery group.
-  """
-  id: ID!
-
-  """
-  Information about the delivery option the buyer has selected.
-  """
-  selectedDeliveryOption: CartDeliveryOption
-}
-
-"""
-Information about a delivery option.
-"""
-type CartDeliveryOption {
-  """
-  The code of the delivery option.
-  """
-  code: String
-
-  """
-  The cost for the delivery option.
-  """
-  cost: MoneyV2!
-
-  """
-  The method for the delivery option.
-  """
-  deliveryMethodType: DeliveryMethod!
-
-  """
-  The description of the delivery option.
-  """
-  description: String
-
-  """
-  The unique identifier of the delivery option.
-  """
-  handle: String!
-
-  """
-  The title of the delivery option.
-  """
-  title: String
 }
 
 """
@@ -249,6 +144,51 @@ type CartLineCost {
   The total cost of the merchandise line.
   """
   totalAmount: MoneyV2!
+}
+
+input CartLineInput {
+  """
+  The ID of the cart line.
+  """
+  cartLineId: ID!
+
+  """
+  The quantity of the cart line to be merged.The max quantity is 2000.
+  """
+  quantity: Int!
+}
+
+"""
+An operation to apply to the Cart.
+"""
+input CartOperation @oneOf {
+  expand: ExpandOperation
+  merge: MergeOperation
+
+  """
+  A cart line update operation. Only stores on the Shopify Plus plan can use apps with update operations.
+  """
+  update: UpdateOperation
+}
+
+"""
+A customization which applies cart transformations to the merchandise lines.
+"""
+type CartTransform implements HasMetafields {
+  """
+  Returns a metafield by namespace and key that belongs to the resource.
+  """
+  metafield(
+    """
+    The key for the metafield.
+    """
+    key: String!
+
+    """
+    The container the metafield belongs to. If omitted, the app-reserved namespace will be used.
+    """
+    namespace: String
+  ): Metafield
 }
 
 """
@@ -1508,7 +1448,7 @@ enum CountryCode {
   TO
 
   """
-  Türkiye.
+  Turkey.
   """
   TR
 
@@ -2501,6 +2441,11 @@ type Customer implements HasMetafields {
   email: String
 
   """
+  The customer's first name.
+  """
+  firstName: String
+
+  """
   Whether the customer has any of the given tags.
   """
   hasAnyTag(
@@ -2524,6 +2469,11 @@ type Customer implements HasMetafields {
   A unique identifier for the customer.
   """
   id: ID!
+
+  """
+  The customer's last name.
+  """
+  lastName: String
 
   """
   Returns a metafield by namespace and key that belongs to the resource.
@@ -2574,177 +2524,107 @@ Example values: `"29.99"`, `"29.999"`.
 """
 scalar Decimal
 
-"""
-Represents information about the merchandise in the cart.
-"""
-type DeliverableCartLine {
+input ExpandOperation {
   """
-  Retrieve a cart line attribute by key.
-
-  Cart line attributes are also known as line item properties in Liquid.
+  The cart line id to expand.
   """
-  attribute(
-    """
-    The key of the attribute to retrieve.
-    """
-    key: String
-  ): Attribute
+  cartLineId: ID!
 
   """
-  The ID of the cart line.
+  The cart items to expand.
   """
-  id: ID!
+  expandedCartItems: [ExpandedItem!]!
 
   """
-  The merchandise that the buyer intends to purchase.
+  The image of the group.
   """
-  merchandise: Merchandise!
+  image: ImageInput
 
   """
-  The quantity of the merchandise that the customer intends to purchase.
+  The price adjustment to the group.
+  """
+  price: PriceAdjustment
+
+  """
+  Title override. If title is not provided, variant title is used.
+  """
+  title: String
+}
+
+input ExpandedItem {
+  """
+  The merchandise id of the expanded item.
+  """
+  merchandiseId: ID!
+
+  """
+  The price adjustment for the expanded item.
+  """
+  price: ExpandedItemPriceAdjustment
+
+  """
+  The quantity of the expanded item.The max quantity is 2000.
   """
   quantity: Int!
 }
 
 """
-List of different delivery method types.
+A fixed price per unit adjustment to apply to the expanded item.
 """
-enum DeliveryMethod {
+input ExpandedItemFixedPricePerUnitAdjustment {
   """
-  Local Delivery.
-  """
-  LOCAL
-
-  """
-  None.
-  """
-  NONE
-
-  """
-  Shipping to a Pickup Point.
-  """
-  PICKUP_POINT
-
-  """
-  Local Pickup.
-  """
-  PICK_UP
-
-  """
-  Retail.
-  """
-  RETAIL
-
-  """
-  Shipping.
-  """
-  SHIPPING
-}
-
-"""
-The discount to be applied.
-"""
-input Discount {
-  """
-  The discount message.
-  """
-  message: String
-
-  """
-  The targets of the discount.
-  """
-  targets: [Target!]!
-
-  """
-  The value of the discount.
-  """
-  value: Value!
-}
-
-"""
-The strategy that's applied to the list of discounts.
-"""
-enum DiscountApplicationStrategy {
-  """
-  Only apply the first discount with conditions that are satisfied.
-  """
-  FIRST
-
-  """
-  Only apply the discount that offers the maximum reduction.
-  """
-  MAXIMUM
-}
-
-"""
-A discount wrapper node.
-"""
-type DiscountNode implements HasMetafields {
-  """
-  Returns a metafield by namespace and key that belongs to the resource.
-  """
-  metafield(
-    """
-    The key for the metafield.
-    """
-    key: String!
-
-    """
-    The container the metafield belongs to. If omitted, the app-reserved namespace will be used.
-    """
-    namespace: String
-  ): Metafield
-}
-
-"""
-A fixed amount value.
-"""
-input FixedAmount {
-  """
-  The fixed amount value of the discount, in the currency of the cart.
-
-  The amount must be greater than or equal to 0.
+  The fixed price amount per quantity of the expanded item in presentment currency.
   """
   amount: Decimal!
-
-  """
-  Whether to apply the value to each entitled item.
-
-  The default value is `false`, which causes the value to be applied once across the entitled items.
-  When the value is `true`, the value will be applied to each of the entitled items.
-  """
-  appliesToEachItem: Boolean
 }
 
 """
-The result of the function. In API versions 2023-10 and beyond, this type is deprecated in favor of `FunctionRunResult`.
+A price adjustment to apply to the expanded item.
+"""
+input ExpandedItemPriceAdjustment {
+  """
+  The price adjustment for the expanded item.
+  """
+  adjustment: ExpandedItemPriceAdjustmentValue!
+}
+
+"""
+A price adjustment to apply to a cart line.
+"""
+input ExpandedItemPriceAdjustmentValue @oneOf {
+  """
+  A fixed price per unit adjustment to apply to the expanded item.
+  """
+  fixedPricePerUnit: ExpandedItemFixedPricePerUnitAdjustment
+}
+
+"""
+Transformations to apply to the Cart. In API versions 2023-10 and beyond, this
+type is deprecated in favor of `FunctionRunResult`.
 """
 input FunctionResult {
   """
-  The strategy to apply the list of discounts.
+  Cart operations to run on Cart.
   """
-  discountApplicationStrategy: DiscountApplicationStrategy!
-
-  """
-  The list of discounts to be applied.
-  """
-  discounts: [Discount!]!
+  operations: [CartOperation!]!
 }
 
 """
-The result of the function.
+Transformations to apply to the Cart.
 """
 input FunctionRunResult {
   """
-  The strategy to apply the list of discounts.
+  Cart operations to run on Cart.
   """
-  discountApplicationStrategy: DiscountApplicationStrategy!
-
-  """
-  The list of discounts to be applied.
-  """
-  discounts: [Discount!]!
+  operations: [CartOperation!]!
 }
+
+"""
+A function-scoped handle to a refer a resource.
+The Handle type appears in a JSON response as a String, but it is not intended to be human-readable.
+Example value: `"10079785100"`
+"""
+scalar Handle
 
 """
 Represents information about the metafields associated to the specified resource.
@@ -2790,8 +2670,15 @@ Example value: `"gid://shopify/Product/10079785100"`
 scalar ID
 
 """
-The input object for the function.
+The image of an object.
 """
+input ImageInput {
+  """
+  The URL of the image.
+  """
+  url: URL!
+}
+
 type Input {
   """
   The cart.
@@ -2799,9 +2686,9 @@ type Input {
   cart: Cart!
 
   """
-  The discount node executing the function.
+  The CartTransform containing the function.
   """
-  discountNode: DiscountNode!
+  cartTransform: CartTransform!
 
   """
   The localization of the Function execution context.
@@ -3620,81 +3507,6 @@ type Localization {
 }
 
 """
-Represents a mailing address.
-"""
-type MailingAddress {
-  """
-  The first line of the address. Typically the street address or PO Box number.
-  """
-  address1: String
-
-  """
-  The second line of the address. Typically the number of the apartment, suite, or unit.
-  """
-  address2: String
-
-  """
-  The name of the city, district, village, or town.
-  """
-  city: String
-
-  """
-  The name of the customer's company or organization.
-  """
-  company: String
-
-  """
-  The two-letter code for the country of the address. For example, US.
-  """
-  countryCode: CountryCode
-
-  """
-  The first name of the customer.
-  """
-  firstName: String
-
-  """
-  The last name of the customer.
-  """
-  lastName: String
-
-  """
-  The approximate latitude of the address.
-  """
-  latitude: Float
-
-  """
-  The approximate longitude of the address.
-  """
-  longitude: Float
-
-  """
-  The market of the address.
-  """
-  market: Market
-
-  """
-  The full name of the customer, based on firstName and lastName.
-  """
-  name: String
-
-  """
-  A unique phone number for the customer. Formatted using E.164 standard. For example, +16135551111.
-  """
-  phone: String
-
-  """
-  The two-letter code for the region. For example, ON.
-  """
-  provinceCode: String
-
-  """
-  The zip or postal code of the address.
-  """
-  zip: String
-}
-
-"""
 A market is a group of one or more regions that you want to target for international sales.
 By creating a market, you can configure a distinct, localized shopping experience for
 customers from a specific area of the world. For example, you can
@@ -3706,7 +3518,7 @@ type Market implements HasMetafields {
   """
   A human-readable unique string for the market automatically generated from its title.
   """
-  handle: String!
+  handle: Handle!
 
   """
   A globally-unique identifier.
@@ -3764,6 +3576,33 @@ The merchandise to be purchased at checkout.
 """
 union Merchandise = CustomProduct | ProductVariant
 
+input MergeOperation {
+  """
+  The list of cart lines to merge.
+  """
+  cartLines: [CartLineInput!]!
+
+  """
+  The image of the group.
+  """
+  image: ImageInput
+
+  """
+  The product variant that models the group of lines.
+  """
+  parentVariantId: ID!
+
+  """
+  The price adjustment to the group.
+  """
+  price: PriceAdjustment
+
+  """
+  The name of the group of lines to merge. If it isn't specified, it will use the parent_variant' name.
+  """
+  title: String
+}
+
 """
 [Metafields](https://shopify.dev/apps/metafields)
 enable you to attach additional information to a
@@ -3815,7 +3654,7 @@ type MutationRoot {
   ): Void! @deprecated(reason: "Use the target-specific field instead.")
 
   """
-  Handles the Function result for the purchase.product-discount.run target.
+  Handles the Function result for the purchase.cart-transform.run target.
   """
   run(
     """
@@ -3825,14 +3664,16 @@ type MutationRoot {
   ): Void!
 }
 
-"""
-A percentage value.
-"""
-input Percentage {
+input PriceAdjustment {
   """
-  The percentage value.
+  The percentage price decrease of the price adjustment.
+  """
+  percentageDecrease: PriceAdjustmentValue
+}
 
-  The value is validated against: >= 0.
+input PriceAdjustmentValue {
+  """
+  The value of the price adjustment.
   """
   value: Decimal!
 }
@@ -3844,7 +3685,7 @@ type Product implements HasMetafields {
   """
   A unique human-friendly string of the product's title.
   """
-  handle: String!
+  handle: Handle!
 
   """
   Whether the product has any of the given tags.
@@ -3983,24 +3824,6 @@ type ProductVariant implements HasMetafields {
 }
 
 """
-The target product variant.
-"""
-input ProductVariantTarget {
-  """
-  The ID of the target product variant.
-  """
-  id: ID!
-
-  """
-  The number of line items that are being discounted.
-  The default value is `null`, which represents the quantity of the matching line items.
-
-  The value is validated against: > 0.
-  """
-  quantity: Int
-}
-
-"""
 Represents information about the buyer that is interacting with the cart.
 """
 type PurchasingCompany {
@@ -4114,16 +3937,6 @@ type Shop implements HasMetafields {
 }
 
 """
-The target of the discount.
-"""
-input Target @oneOf {
-  """
-  The target product variant.
-  """
-  productVariant: ProductVariantTarget
-}
-
-"""
 A subset of the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format that
 includes the time but not the date or timezone which is determined from context.
 For example, "05:43:21".
@@ -4131,18 +3944,67 @@ For example, "05:43:21".
 scalar TimeWithoutTimezone
 
 """
-The value of the discount.
+Represents an [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986) and
+[RFC 3987](https://datatracker.ietf.org/doc/html/rfc3987)-compliant URI string.
+
+For example, `"https://johns-apparel.myshopify.com"` is a valid URL. It includes a scheme (`https`) and a host
+(`johns-apparel.myshopify.com`).
 """
-input Value @oneOf {
+scalar URL
+
+"""
+A cart line update operation. Only stores on the Shopify Plus plan can use apps with update operations.
+"""
+input UpdateOperation {
   """
-  A fixed amount value.
+  The ID of the cart line.
   """
-  fixedAmount: FixedAmount
+  cartLineId: ID!
 
   """
-  A percentage value.
+  The image override for the cart line item.
   """
-  percentage: Percentage
+  image: ImageInput
+
+  """
+  The price adjustment for the cart line item.
+  """
+  price: UpdateOperationPriceAdjustment
+
+  """
+  The title override for the cart line item. If not provided, the variant title is used.
+  """
+  title: String
+}
+
+"""
+A fixed price per unit adjustment to apply to a cart line.
+"""
+input UpdateOperationFixedPricePerUnitAdjustment {
+  """
+  The fixed price amount per quantity of the cart line item in presentment currency.
+  """
+  amount: Decimal!
+}
+
+"""
+A price adjustment to apply to a cart line item.
+"""
+input UpdateOperationPriceAdjustment {
+  """
+  The price adjustment per unit to apply to the cart line item.
+  """
+  adjustment: UpdateOperationPriceAdjustmentValue!
+}
+
+"""
+A price adjustment to apply to a cart line item.
+"""
+input UpdateOperationPriceAdjustmentValue @oneOf {
+  """
+  A fixed price per unit adjustment to apply to a cart line.
+  """
+  fixedPricePerUnit: UpdateOperationFixedPricePerUnitAdjustment
 }
 
 """
