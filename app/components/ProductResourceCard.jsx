@@ -1,5 +1,5 @@
 import { ResourcePicker } from "@shopify/app-bridge-react"
-import { Box, Button, Card, Icon, Listbox, Text, VerticalStack } from "@shopify/polaris"
+import { Box, Button, Card, Icon, Listbox, Text, Thumbnail, VerticalStack } from "@shopify/polaris"
 import { XIcon } from "@shopify/polaris-icons"
 import { useCallback, useState } from "react";
 
@@ -34,12 +34,12 @@ export default function ProductResourceCard({ title = "Select products", selecti
   return <Card>
     <VerticalStack gap="3">
 
-      <Text as={"p"} variant="headingSm">
+      <Text as={"p"}>
         {title}
       </Text>
       <Button onClick={() => handleResourcePickerOpen('Product')}>Browse</Button>
       <ResourcePicker
-        resourceType={isPickerOpen?.resourceType ?? "Product"}
+        resourceType={"Product"}
         open={isPickerOpen.open}
         initialSelectionIds={selection ?? []}
         onSelection={handleProductSelect}
@@ -69,7 +69,6 @@ export default function ProductResourceCard({ title = "Select products", selecti
                         maxWidth: "80%",
                         height: "auto",
                       }} onClick={() => handleResourcePickerOpen()}>
-
                       <VerticalStack gap={"1"}>
                         <Text as="p">
                           {selectedOption?.title ?? "Product not found"}

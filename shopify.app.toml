@@ -2,7 +2,7 @@
 
 client_id = "34a42b96b110a1fbafa817f89660851a"
 name = "Service Hub"
-application_url = "https://additions-rebecca-proceedings-temperatures.trycloudflare.com"
+application_url = "https://lake-template-recommends-weblog.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products,read_products,write_discounts,write_cart_transforms"
 
 [auth]
 redirect_urls = [
-  "https://additions-rebecca-proceedings-temperatures.trycloudflare.com/auth/callback",
-  "https://additions-rebecca-proceedings-temperatures.trycloudflare.com/auth/shopify/callback",
-  "https://additions-rebecca-proceedings-temperatures.trycloudflare.com/api/auth/callback"
+  "https://lake-template-recommends-weblog.trycloudflare.com/auth/callback",
+  "https://lake-template-recommends-weblog.trycloudflare.com/auth/shopify/callback",
+  "https://lake-template-recommends-weblog.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

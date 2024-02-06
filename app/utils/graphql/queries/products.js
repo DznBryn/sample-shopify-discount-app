@@ -1,3 +1,39 @@
+export async function getProducts({
+    admin,
+    hasNextPage,
+    lastProductCursor,
+    products
+  }){
+    while (hasNextPage) {
+      const data = await admin.graphql(GET_PRODUCT_WITH_PURCHASE, {
+        variables: {
+          first: 100,
+          lastProductCursor,
+          variantsFirst: 100,
+        }
+      })
+      const dataJson = await data.json();
+
+      if (dataJson?.data?.products?.edges?.length > 0) {
+        const edges = dataJson.data.products.edges;
+        hasNextPage = dataJson.data.products.pageInfo.hasNextPage;
+        lastProductCursor = edges[edges.length - 1]?.cursor;
+
+        edges.forEach(edge => {
+          const variants = edge.node.variants.edges.filter(variantEdge => variantEdge.node?.metafield?.value && JSON.parse(variantEdge.node.metafield.value).length > 0);
+          if (variants.length) {
+            products.push(...variants.map(variantEdge => {
+              variantEdge.node.metafield.value = JSON.parse(variantEdge.node.metafield.value);
+              return { productId: edge?.node?.id, productTitle: edge?.node?.title, image: edge?.node?.featuredImage, prices: edge?.node?.priceRangeV2, ...variantEdge.node }
+            }));
+          }
+        });
+      }
+
+    }
+    return products
+  }
+
 export const GET_PRODUCTS = `#graphql
   	query getProducts($first: Int!, $lastProductCursor: String, $variantsFirst: Int! ) {
     products(first: $first, after: $lastProductCursor) {

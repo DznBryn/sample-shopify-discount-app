@@ -32,6 +32,21 @@ export const useProductWithPurchase = create((set) => ({
       });
     },
   },
+  rewards: {
+    list: [],
+    loading: false,
+    setList: (resource = []) => {
+      set((state) => {
+        return {
+          ...state,
+          rewards: {
+            ...state.rewards,
+            ...resource,
+          },
+        };
+      });
+    },
+  }
 }));
 export const useSharedStore = create((set) => ({
   products: [],
