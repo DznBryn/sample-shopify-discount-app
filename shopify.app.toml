@@ -2,7 +2,7 @@
 
 client_id = "34a42b96b110a1fbafa817f89660851a"
 name = "Service Hub"
-application_url = "https://lake-template-recommends-weblog.trycloudflare.com"
+application_url = "https://symposium-billion-shapes-architects.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products,read_products,write_discounts,write_cart_transforms"
 
 [auth]
 redirect_urls = [
-  "https://lake-template-recommends-weblog.trycloudflare.com/auth/callback",
-  "https://lake-template-recommends-weblog.trycloudflare.com/auth/shopify/callback",
-  "https://lake-template-recommends-weblog.trycloudflare.com/api/auth/callback"
+  "https://symposium-billion-shapes-architects.trycloudflare.com/auth/callback",
+  "https://symposium-billion-shapes-architects.trycloudflare.com/auth/shopify/callback",
+  "https://symposium-billion-shapes-architects.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

@@ -33,7 +33,6 @@ export default function ProductResourceCard({ title = "Select products", selecti
 
   return <Card>
     <VerticalStack gap="3">
-
       <Text as={"p"}>
         {title}
       </Text>

@@ -2,9 +2,6 @@ import { useEffect } from "react";
 import { json } from "@remix-run/node";
 import {
   useActionData,
-  useLoaderData,
-  useNavigation,
-  useSubmit,
 } from "@remix-run/react";
 import {
   Page,
@@ -12,11 +9,6 @@ import {
   Text,
   VerticalStack,
   Card,
-  Button,
-  HorizontalStack,
-  Box,
-  Divider,
-  List,
   Link,
 } from "@shopify/polaris";
 
@@ -73,13 +65,7 @@ export async function action({ request }) {
 }
 
 export default function Index() {
-  const nav = useNavigation();
-  const { shop } = useLoaderData();
   const actionData = useActionData();
-  const submit = useSubmit();
-
-  const isLoading =
-    ["loading", "submitting"].includes(nav.state) && nav.formMethod === "POST";
 
   const productId = actionData?.product?.id.replace(
     "gid://shopify/Product/",
@@ -92,7 +78,6 @@ export default function Index() {
     }
   }, [productId]);
 
-  const generateProduct = () => submit({}, { replace: true, method: "POST" });
 
   return (
     <Page>
@@ -105,7 +90,7 @@ export default function Index() {
               <VerticalStack gap="5">
                 <VerticalStack gap="2">
                   <Text as="h2" variant="headingMd">
-                    Congrats on creating a new Shopify app 🎉
+                    Weclome to Service Hub 🎉
                   </Text>
                   <Text variant="bodyMd" as="p">
                     This embedded app template uses{" "}

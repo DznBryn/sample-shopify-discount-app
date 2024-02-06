@@ -81,7 +81,6 @@ export function ListProductWithPurchaseLoader() {
 
   useEffect(() => {
     if (fetcher.state === 'loading' && fetcher?.data?.data) {
-      console.log('Loading', fetcher);
       if (removeId !== '') {
         const newList = list.filter(item => item.id !== removeId);
         setList({ list: newList, loading: false });
@@ -99,7 +98,7 @@ export function ListProductWithPurchaseLoader() {
     });
     return setRemoveId(id);
   };
-
+  
   return (
     <IndexTable
       resourceName={{ singular: 'Product', plural: 'Products' }}
@@ -113,7 +112,7 @@ export function ListProductWithPurchaseLoader() {
       ]}
       selectable={false}
     >
-      {list.map((item, index) => (
+      {nomralizeData(list).map((item, index) => (
         <IndexTable.Row
           id={`productVariant-${item.id}-${index}`}
           position={index}
