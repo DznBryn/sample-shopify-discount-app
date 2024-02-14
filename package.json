@@ -15,7 +15,8 @@
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "shopify": "shopify",
     "prisma": "prisma",
-    "setup": "prisma generate && prisma migrate deploy"
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && prisma migrate deploy && remix build"
   },
   "dependencies": {
     "@prisma/client": "^4.13.0",
