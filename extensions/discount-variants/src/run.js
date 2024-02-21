@@ -62,8 +62,12 @@ export function run(input) {
     };
   }
 
-  const results = configurations.map((configuration) =>
-    extractSelectedVariants(configuration)
+  let results = [];
+
+  configurations.forEach(
+    (configuration) =>
+      configuration.selection.length > 0 &&
+      results.push(extractSelectedVariants(configuration))
   );
 
   const discounts = results.map((result) => {

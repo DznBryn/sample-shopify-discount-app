@@ -62,7 +62,7 @@ export const action = async ({ params, request }) => {
       endsAt: endsAt && new Date(endsAt),
     };
 
-    const discountProducts = configuration.map((config) => {
+    const discountProducts = configuration.flatMap((config) => {
       return {
         percentage: config.percentage,
         selection: config.selection,
@@ -112,7 +112,11 @@ export const action = async ({ params, request }) => {
       const responseJson = await response.json();
 
       const errors = responseJson.data.discountCreate?.userErrors;
-      return json({ redirect: true, errors });
+      if (errors.length === 0) {
+        return json({ redirect: true, errors });
+      } else {
+        return json({ redirect: false, errors });
+      }
     } else {
       const response = await admin.graphql(
         `#graphql
@@ -148,7 +152,11 @@ export const action = async ({ params, request }) => {
 
       const errors = responseJson?.data?.discountCreate?.userErrors ?? [];
 
-      return json({ redirect: true, errors });
+      if (errors.length === 0) {
+        return json({ redirect: true, errors });
+      } else {
+        return json({ redirect: false, errors });
+      }
     }
   }
 
@@ -189,7 +197,7 @@ export default function DiscountVariants() {
   }, [configurations]);
 
   const removeConfiguration = useCallback((index) => {
-    if (configurations.length > 1){
+    if (configurations.length > 1) {
       const updateConfigurations = configurations.filter((_, i) => i !== index);
       setConfigurations(updateConfigurations);
     }
@@ -319,7 +327,7 @@ export default function DiscountVariants() {
               }
 
               <Box paddingInlineStart={"400"} paddingInlineEnd={"400"} width="100%">
-                <Button plain textAlign="center" onClick={() => handleAddConfiguration()} disabled={configurations.length >= 3}>
+                <Button plain textAlign="center" onClick={() => handleAddConfiguration()} disabled={configurations.length >= 2}>
                   Add discount variant
                 </Button>
               </Box>

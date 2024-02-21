@@ -67,7 +67,7 @@ export const action = async ({ params, request }) => {
         usageLimit,
         appliesOncePerCustomer,
       };
-
+      
       const response = await admin.graphql(
         `#graphql
           mutation UpdateCodeDiscount($id: ID!, $discount: DiscountCodeAppInput!) {
@@ -96,9 +96,13 @@ export const action = async ({ params, request }) => {
       );
 
       const responseJson = await response.json();
-      const errors = responseJson.data.discountUpdate?.userErrors;
-
-      return json({ redirect: false, errors });
+      const errors = responseJson.data.discountUpdate?.userErrors ?? [];
+      
+      if(errors.length === 0) {
+        return json({ redirect: true, errors });
+      } else {
+        return json({ redirect: false, errors });
+      }
     } else {
       const response = await admin.graphql(
         `#graphql
@@ -126,10 +130,14 @@ export const action = async ({ params, request }) => {
           },
         }
       );
-
       const responseJson = await response.json();
-      const errors = responseJson.data.discountUpdate?.userErrors;
-      return json({ redirect: true, errors });
+      const errors = responseJson.data.discountUpdate?.userErrors ?? [];
+      
+      if (errors.length === 0) {
+        return json({ redirect: true, errors });
+      } else {
+        return json({ redirect: false, errors });
+      }
     }
   }
 
@@ -288,9 +296,9 @@ export default function DiscountVariantsEdit() {
     },
   ]);
 
-  const handleUpdateConfiguration = useCallback((configurations) => {
+  const handleUpdateConfiguration = (configurations) => {
     return setConfigurations(configurations);
-  }, []);
+  };
 
   const { metafieldId } = discount.configuration;
 
