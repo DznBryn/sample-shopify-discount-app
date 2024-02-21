@@ -52,13 +52,19 @@ export function DiscountVariant({ configurations, configIndex, onChange, showBut
 
 
   useEffect(() => {
-    if (selection.selection.length > 0 && JSON.stringify(productVariants.value) !== JSON.stringify(selection.selection)) {
+    if (selection.selection.length > 0) {
       productVariants.onChange(selection.selection)
     }
-    if (selection.selection.length === 0 && productVariants.value?.length > 0) {
-      productVariants.onChange(productVariants.defaultValue)
+    if (selection.selection.length === 0 ) {
+      configurations[configIndex] = {
+        ...configurations[configIndex],
+        percentage: percentage.value,
+        selection: [],
+      }
+      onChange(configurations);
     }
-  }, [JSON.stringify(selection.selection.length)])
+    
+  }, [JSON.stringify(selection.selection)])
 
 
   const removeProduct = useCallback(
@@ -70,7 +76,15 @@ export function DiscountVariant({ configurations, configIndex, onChange, showBut
   );
 
   const handleOnSelect = (resource) => {
-    if (resource) setSelection(resource)
+    if (resource) {
+      const filterResource = resource.selection.filter((item) => {
+        const variants = item.variants.filter((variant) => variant.inventoryQuantity > 0);
+        item.variants = variants;
+        return item.variants.length > 0;
+      });
+      resource.selection = filterResource;
+      setSelection(resource)
+    }
     return setIsPickerOpen({
       ...isPickerOpen,
       open: false});
@@ -111,6 +125,8 @@ export function DiscountVariant({ configurations, configIndex, onChange, showBut
         <ResourcePicker
           resourceType={isPickerOpen.resourceType ?? "Product"}
           open={isPickerOpen.open}
+          showHidden={false}
+          showDraft={false}
           initialSelectionIds={selection?.selection ?? []}
           onSelection={handleOnSelect}
           onCancel={() => setIsPickerOpen({
