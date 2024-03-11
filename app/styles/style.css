@@ -8,6 +8,15 @@
   margin: auto;
 }
 
+.Polaris-HorizontalStack{
+  justify-content: space-between;
+  align-items: center;
+}
+
+.Polaris-Text--headingXs{
+  font-size: var(--p-text-heading-sm-font-size);
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);

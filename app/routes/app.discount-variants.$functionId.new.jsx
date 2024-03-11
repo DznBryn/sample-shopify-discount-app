@@ -183,7 +183,7 @@ export default function DiscountVariants() {
   ]);
 
   const handleAddConfiguration = useCallback(() => {
-    if (configurations.length <= 3) {
+    if (configurations.length <= 8) {
       const newConfiguration = {
         percentage: "0",
         selection: [],
@@ -264,12 +264,19 @@ export default function DiscountVariants() {
         configuration: configurations.map((config) => {
           return {
             percentage: parseFloat(config.percentage),
-            selection: config.selection,
+            selection: config.selection.map((selection) => {
+              return {
+                id: selection.id,
+                title: selection.title,
+                variants: selection.variants.map((variant) => ({
+                  id: variant.id,
+                })),
+              };
+            }),
           }
         }
         ),
       };
-
       submitForm({ formAction, discount: JSON.stringify(discount) }, { method: "post" });
 
       return { status: "success" };
@@ -327,7 +334,7 @@ export default function DiscountVariants() {
               }
 
               <Box paddingInlineStart={"400"} paddingInlineEnd={"400"} width="100%">
-                <Button plain textAlign="center" onClick={() => handleAddConfiguration()} disabled={configurations.length >= 2}>
+                <Button plain textAlign="center" onClick={() => handleAddConfiguration()} disabled={configurations.length >= 8}>
                   Add discount variant
                 </Button>
               </Box>
@@ -357,7 +364,7 @@ export default function DiscountVariants() {
                 discountMethod.value === DiscountMethod.Automatic
                   ? discountTitle.value
                   : discountCode.value,
-              appDiscountType: "Volume",
+              appDiscountType: "Discount Variant",
               isEditing: false,
             }}
             performance={{

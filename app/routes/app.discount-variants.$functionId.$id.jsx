@@ -24,6 +24,8 @@ import {
 } from "@shopify/discount-app-components";
 import {
   Banner,
+  Box,
+  Button,
   Layout,
   Page,
   PageActions,
@@ -67,7 +69,7 @@ export const action = async ({ params, request }) => {
         usageLimit,
         appliesOncePerCustomer,
       };
-      
+
       const response = await admin.graphql(
         `#graphql
           mutation UpdateCodeDiscount($id: ID!, $discount: DiscountCodeAppInput!) {
@@ -97,8 +99,8 @@ export const action = async ({ params, request }) => {
 
       const responseJson = await response.json();
       const errors = responseJson.data.discountUpdate?.userErrors ?? [];
-      
-      if(errors.length === 0) {
+
+      if (errors.length === 0) {
         return json({ redirect: true, errors });
       } else {
         return json({ redirect: false, errors });
@@ -132,7 +134,7 @@ export const action = async ({ params, request }) => {
       );
       const responseJson = await response.json();
       const errors = responseJson.data.discountUpdate?.userErrors ?? [];
-      
+
       if (errors.length === 0) {
         return json({ redirect: true, errors });
       } else {
@@ -234,7 +236,7 @@ export const loader = async ({ params, request }) => {
         selection: config.selection,
       };
     });
-  
+
     const discount = {
       title,
       method,
@@ -278,29 +280,14 @@ export const loader = async ({ params, request }) => {
 };
 
 export default function DiscountVariantsEdit() {
-  const submitForm = useSubmit();
-  const actionData = useActionData();
   const { discount } = useLoaderData();
-  const navigation = useNavigation();
-  const app = useAppBridge();
-
-  const isLoading = navigation.state === "submitting";
-  const currencyCode = CurrencyCode.Cad;
-  const submitErrors = actionData?.errors || [];
-  const redirect = Redirect.create(app);
-
-  const [configurations, setConfigurations] = useState(discount.configuration.data ?? [
+  const { metafieldId } = discount.configuration;
+  const [configurations, setConfigurations] = useState(discount?.configuration?.data ?? [
     {
       percentage: 0,
       selection: [],
     },
   ]);
-
-  const handleUpdateConfiguration = (configurations) => {
-    return setConfigurations(configurations);
-  };
-
-  const { metafieldId } = discount.configuration;
 
   const {
     fields: {
@@ -331,7 +318,7 @@ export default function DiscountVariantsEdit() {
       startDate: useField(discount.startsAt),
       endDate: useField(discount.endsAt),
       configuration: {
-        data: configurations.map((config) => {
+        data: discount?.configuration?.data?.map((config) => {
           return {
             percentage: useField(config.percentage),
             selection: useField(config.selection),
@@ -354,8 +341,16 @@ export default function DiscountVariantsEdit() {
           metafieldId,
           data: configurations.map((config) => {
             return {
-              percentage: config.percentage,
-              selection: config.selection,
+              percentage: parseFloat(config.percentage),
+              selection: config.selection.map((selection) => {
+                return {
+                  id: selection.id,
+                  title: selection.title,
+                  variants: selection.variants.map((variant) => ({
+                    id: variant.id,
+                  })),
+                };
+              }),
             }
           })
         },
@@ -366,6 +361,38 @@ export default function DiscountVariantsEdit() {
       return { status: "success" };
     },
   });
+
+  const submitForm = useSubmit();
+  const actionData = useActionData();
+  const navigation = useNavigation();
+  const app = useAppBridge();
+
+  const isLoading = navigation.state === "submitting";
+  const currencyCode = CurrencyCode.Cad;
+  const submitErrors = actionData?.errors || [];
+  const redirect = Redirect.create(app);
+
+
+  const handleUpdateConfiguration = useCallback((configurations) => {
+    return setConfigurations(configurations);
+  }, []);
+
+  const handleAddConfiguration = () => {
+    if (configurations.length <= 8) {
+      const newConfiguration = {
+        percentage: "0",
+        selection: [],
+      };
+      handleUpdateConfiguration([...configurations, newConfiguration]);
+    }
+  };
+
+  const removeConfiguration = (index) => {
+    if (configurations.length > 1) {
+      const updateConfigurations = configurations.filter((_, i) => i !== index);
+      handleUpdateConfiguration(updateConfigurations);
+    }
+  };
 
   useEffect(() => {
     if (actionData?.errors.length === 0 && actionData?.redirect) {
@@ -424,10 +451,14 @@ export default function DiscountVariantsEdit() {
               />
               {
                 configurations.map((config, index) => {
-                  return <DiscountVariant key={index} configuration={config} configurations={configurations} configIndex={index} onChange={handleUpdateConfiguration} showButtons={false} />
+                  return <DiscountVariant key={index} configuration={config} removeConfiguration={removeConfiguration} configurations={configurations} configIndex={index} onChange={handleUpdateConfiguration} showButtons={true} />
                 })
               }
-
+              <Box paddingInlineStart={"400"} paddingInlineEnd={"400"} width="100%">
+                <Button plain textAlign="center" onClick={() => handleAddConfiguration()} disabled={configurations.length >= 8}>
+                  Add discount variant
+                </Button>
+              </Box>
               {discountMethod.value === DiscountMethod.Code && (
                 <UsageLimitsCard
                   totalUsageLimit={usageLimit}
@@ -451,7 +482,7 @@ export default function DiscountVariantsEdit() {
                 discountMethod.value === DiscountMethod.Automatic
                   ? discountTitle.value
                   : discountCode.value,
-              appDiscountType: "Volume",
+              appDiscountType: "Discount Variant",
               isEditing: false,
             }}
             performance={{
