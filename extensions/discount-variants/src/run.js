@@ -55,7 +55,6 @@ export function run(input) {
         },
       }))
     );
-    console.error('selectedVariants', data.message)
     return {
       quantity: data.quantity,
       percentage: data.percentage,
