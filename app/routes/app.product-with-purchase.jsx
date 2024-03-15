@@ -2,13 +2,14 @@
 
 import { json } from "@remix-run/node";
 import { useFetcher, useLoaderData } from "@remix-run/react";
+
 import { Layout, Page } from "@shopify/polaris";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ErrorBanner } from "~/components/ErrorBanner";
 import CreateReward from "~/components/ProductWithPurchase/CreateReward";
 import ListProductWithPurchase from "~/components/ProductWithPurchase/ListProductWithPurchase";
 import { authenticate } from "~/shopify.server";
-import { METAFIELDS_SET, getProducts } from "~/utils/graphql/queries/products";
+import { METAFIELDS_SET, getProductVariant, getProducts } from "~/utils/graphql/queries/products";
 import { useProductWithPurchase } from "~/utils/hooks/useStore";
 
 export async function action({ request }) {
@@ -118,6 +119,34 @@ export async function action({ request }) {
       return json({ data: updateMetafieldsJson?.data?.metafieldsSet?.metafields ?? null, errors: updateMetafieldsJson?.data?.metafieldsSet?.userErrors ?? [] });
     }
 
+    if (formAction === 'GET_PRODUCT_VARIANTS') {
+
+      const ids = JSON.parse(formData.get('ids'))
+      const selectionData = []
+      const rewardSelectionData = []
+
+      if (ids && ids?.selectionIds?.length > 0) {
+        await Promise.all(ids.selectionIds.map(async (id) => {
+          const res = await getProductVariant(admin, { id });
+          selectionData.push(res?.data?.productVariant);
+        }));
+      }
+
+      if (ids && ids?.rewardSelectionIds?.length > 0) {
+        await Promise.all(ids.rewardSelectionIds.map(async (id) => {
+          const res = await getProductVariant(admin, { id });
+          rewardSelectionData.push(res?.data?.productVariant);
+        }));
+      }
+
+      return json({
+        data: {
+          selectionData,
+          rewardSelectionData
+        }, errors: []
+      });
+    }
+
     return json({ data: null, errors: [] });
   } catch (error) {
     console.error("Error:", error);
@@ -164,7 +193,7 @@ export async function loader({ request }) {
 export default function ProductWithPurchase() {
   const { data, errors } = useLoaderData();
   const [component, setComponent] = useState('');
-  const { selection, rewardSelection } = useProductWithPurchase(state => state);
+  const { selection, rewardSelection, } = useProductWithPurchase(state => state);
   const { setList } = useProductWithPurchase(state => state.rewards);
   const fetcher = useFetcher();
 
@@ -174,21 +203,49 @@ export default function ProductWithPurchase() {
     };
   }, [fetcher.state])
 
-  const handleToggle = (component = "createRewards") => setComponent(component);
+  const handleToggle = useCallback(async (component = "createRewards",
+    defaultSelection,
+    defaultRewardSelection
+  ) => {
+
+    defaultSelection ? selection.setSelection(defaultSelection) : selection.setSelection({
+      selectionId: "",
+      selection: [],
+    });
+
+    defaultRewardSelection ? rewardSelection.setSelection(defaultRewardSelection) : rewardSelection.setSelection({
+      selectionId: "",
+      selection: [],
+    });
+
+    return setComponent(component)
+  }, []);
+
   const handleSubmit = async () => {
+
     if (component === '') return handleToggle("createRewards")
     setList({ loading: true });
+
     await fetcher.submit({
       formAction: 'CREATE_PRODUCT_WITH_PURCHASE',
       selection: JSON.stringify(selection.selection),
       rewardSelection: JSON.stringify(rewardSelection.selection)
     }, { method: 'POST' })
-    selection.setSelection([]);
-    rewardSelection.setSelection([]);
+
+    selection.setSelection({
+      selectionId: "",
+      selection: [],
+    });
+    rewardSelection.setSelection({
+      selectionId: "",
+      selection: [],
+    });
     return handleToggle("");
   }
+
   const mapToComponent = {
     createRewards: <CreateReward />,
+    editRewards: <CreateReward />,
   };
 
   return (
@@ -204,7 +261,7 @@ export default function ProductWithPurchase() {
       <Layout>
         <ErrorBanner errors={errors} data={data} />
         {component !== '' && mapToComponent[component]}
-        <ListProductWithPurchase />
+        <ListProductWithPurchase handleToggle={handleToggle} />
       </Layout>
     </Page>
   );

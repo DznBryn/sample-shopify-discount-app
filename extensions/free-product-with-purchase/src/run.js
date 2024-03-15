@@ -56,7 +56,7 @@ function getMergeCartOperations(cart) {
     
     let expandOps = {
       cartLineId: line.id,
-      title: variant.title + " (w/ Free Product)",
+      title: line.title,
       expandedCartItems: expandRelationship,
     };
 

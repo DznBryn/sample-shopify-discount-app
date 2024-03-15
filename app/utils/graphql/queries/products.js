@@ -34,6 +34,16 @@ export async function getProducts({
     return products
   }
 
+  export async function getProductVariant(admin, {id}) {
+  const data = await admin.graphql(GET_PRODUCT_VARIANT, {
+    variables: {
+      id
+    },
+  });
+  const dataJson = await data.json();
+  return dataJson;
+}
+
 export const GET_PRODUCTS = `#graphql
   	query getProducts($first: Int!, $lastProductCursor: String, $variantsFirst: Int! ) {
     products(first: $first, after: $lastProductCursor) {
@@ -209,4 +219,15 @@ query getProductsWithPurchase($first: Int!, $lastProductCursor: String, $variant
     }
   }
 }
+`;
+export const GET_PRODUCT_VARIANT = `#graphql
+  query getProductVariant($id: ID!) {
+    productVariant(id: $id) {
+      id,
+      product {
+        id
+        title
+      }
+    }
+  }
 `;

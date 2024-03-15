@@ -16,9 +16,9 @@ scopes = "write_products,read_products,write_discounts,write_cart_transforms"
 
 [auth]
 redirect_urls = [
-  "https://shopify-discount-app-one.vercel.app//auth/callback",
-  "https://shopify-discount-app-one.vercel.app//auth/shopify/callback",
-  "https://shopify-discount-app-one.vercel.app//api/auth/callback"
+  "https://shopify-discount-app-one.vercel.app/auth/callback",
+  "https://shopify-discount-app-one.vercel.app/auth/shopify/callback",
+  "https://shopify-discount-app-one.vercel.app/api/auth/callback"
 ]
 
 [webhooks]

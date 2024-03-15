@@ -26,9 +26,12 @@ import {
   Banner,
   Box,
   Button,
+  Card,
   Layout,
   Page,
   PageActions,
+  Text,
+  TextField,
   VerticalStack,
 } from "@shopify/polaris";
 
@@ -233,6 +236,7 @@ export const loader = async ({ params, request }) => {
     )?.map((config) => {
       return {
         percentage: config.percentage,
+        message: config?.message ?? '',
         selection: config.selection,
       };
     });
@@ -246,6 +250,7 @@ export const loader = async ({ params, request }) => {
       appliesOncePerCustomer: appliesOncePerCustomer ?? false,
       startsAt,
       endsAt,
+      message: configuration?.[0]?.message ?? '',
       configuration: {
         data: configuration,
         metafieldId: responseJson.data.discountNode.configurationField.id,
@@ -269,7 +274,8 @@ export const loader = async ({ params, request }) => {
       endsAt: null,
       configuration: [
         {
-          percentage: "0",
+          percentage: 0,
+          message: '',
           selection: [],
         }
       ],
@@ -285,6 +291,7 @@ export default function DiscountVariantsEdit() {
   const [configurations, setConfigurations] = useState(discount?.configuration?.data ?? [
     {
       percentage: 0,
+      message: '',
       selection: [],
     },
   ]);
@@ -301,6 +308,7 @@ export default function DiscountVariantsEdit() {
       appliesOncePerCustomer,
       startDate,
       endDate,
+      message,
     },
     submit,
   } = useForm({
@@ -317,10 +325,12 @@ export default function DiscountVariantsEdit() {
       appliesOncePerCustomer: useField(discount.appliesOncePerCustomer),
       startDate: useField(discount.startsAt),
       endDate: useField(discount.endsAt),
+      message: useField(discount?.configuration?.data?.[0]?.message ?? ''),
       configuration: {
         data: discount?.configuration?.data?.map((config) => {
           return {
             percentage: useField(config.percentage),
+            message: useField(config?.message ?? ''),
             selection: useField(config.selection),
           }
         })
@@ -340,8 +350,10 @@ export default function DiscountVariantsEdit() {
         configuration: {
           metafieldId,
           data: configurations.map((config) => {
+            console.log('slkjdklsa', form.message)
             return {
               percentage: parseFloat(config.percentage),
+              message: form.discountMethod === 'Automatic' ? form.discountTitle : form.message ?? "",
               selection: config.selection.map((selection) => {
                 return {
                   id: selection.id,
@@ -380,7 +392,7 @@ export default function DiscountVariantsEdit() {
   const handleAddConfiguration = () => {
     if (configurations.length <= 8) {
       const newConfiguration = {
-        percentage: "0",
+        percentage: 0,
         selection: [],
       };
       handleUpdateConfiguration([...configurations, newConfiguration]);
@@ -449,6 +461,27 @@ export default function DiscountVariantsEdit() {
                 discountCode={discountCode}
                 discountMethod={discountMethod}
               />
+              {
+                discountMethod.value === DiscountMethod.Code && (
+                  <Card>
+                    <VerticalStack gap="3">
+                      <Text variant="headingMd" as="h2">
+                        Promotion label
+                      </Text>
+                      <div>
+                        <TextField
+                          label="Promotion Label"
+                          autoComplete="on"
+                          labelHidden
+                          placeholder=""
+                          {...message}
+                        />
+                        <div className="Polaris-Labelled__HelpText"><span className="Polaris-Text--root Polaris-Text--break Polaris-Text--subdued">Customers will see this in their cart and at checkout.</span></div>
+                      </div>
+                    </VerticalStack>
+                  </Card>
+                )
+              }
               {
                 configurations.map((config, index) => {
                   return <DiscountVariant key={index} configuration={config} removeConfiguration={removeConfiguration} configurations={configurations} configIndex={index} onChange={handleUpdateConfiguration} showButtons={true} />

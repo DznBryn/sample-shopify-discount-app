@@ -1,12 +1,12 @@
 import { useFetcher } from "@remix-run/react";
-import { Card, EmptyState, Icon, IndexTable, Layout, Thumbnail } from "@shopify/polaris";
+import { Card, EmptyState, Icon, IndexTable, Layout, Thumbnail, Button } from "@shopify/polaris";
 import { useEffect, useState } from "react";
 import { ErrorBanner } from "../ErrorBanner";
 import Loader from "../Loader";
 import { XIcon } from "@shopify/polaris-icons";
 import { useProductWithPurchase } from "~/utils/hooks/useStore";
 
-export default function ListProductWithPurchase() {
+export default function ListProductWithPurchase({ handleToggle }) {
   const { list, loading, setList } = useProductWithPurchase(state => state.rewards);
   const fetcher = useFetcher();
 
@@ -67,17 +67,18 @@ export default function ListProductWithPurchase() {
             image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
           />
         ) : (
-          <ListProductWithPurchaseLoader />
+          <ListProductWithPurchaseLoader handleToggle={handleToggle} />
         )}
       </Card>
     </Layout.Section>
   );
 }
 
-export function ListProductWithPurchaseLoader() {
+export function ListProductWithPurchaseLoader({ handleToggle }) {
   const [removeId, setRemoveId] = useState('');
   const { list, setList } = useProductWithPurchase(state => state.rewards);
   const fetcher = useFetcher();
+  const getProductVariant = useFetcher();
 
   useEffect(() => {
     if (fetcher.state === 'loading' && fetcher?.data?.data) {
@@ -89,6 +90,48 @@ export function ListProductWithPurchaseLoader() {
     }
   }, [fetcher.state]);
 
+  useEffect(() => {
+    if (getProductVariant?.data?.data) {
+      const { selectionData: selection, rewardSelectionData } = getProductVariant?.data?.data
+
+      const rewardSelectionList = []
+      const selectionList = []
+
+      function formatList(data, list) {
+        data?.length > 0 && data.forEach(item => {
+          if (list.find(listItem => listItem.id === item.product.id)) {
+            const index = list.findIndex(listItem => listItem.id === item.product.id)
+            return list[index].variants.push({
+              id: item.id
+            })
+          }
+          return item?.id && list.push({
+            id: item.product.id,
+            title: item.product.title,
+            variants: [{
+              id: item.id
+            }]
+          })
+        })
+      }
+
+      formatList(selection, selectionList)
+      formatList(rewardSelectionData, rewardSelectionList)
+
+      const selectionData = {
+        selectionId: '',
+        selection: selectionList
+      }
+      const rewardSelections = {
+        selectionId: '',
+        selection: rewardSelectionList
+      }
+
+      handleToggle('editRewards', selectionData, rewardSelections)
+    }
+  }, [getProductVariant.state])
+
+
   const removeProduct = async (id) => {
     await fetcher.submit({
       formAction: 'DELETE_PRODUCT_WITH_PURCHASE',
@@ -98,7 +141,19 @@ export function ListProductWithPurchaseLoader() {
     });
     return setRemoveId(id);
   };
-  
+
+  const editProduct = async (item) => {
+    return await getProductVariant.submit({
+      formAction: 'GET_PRODUCT_VARIANTS',
+      ids: JSON.stringify({
+        selectionIds: [item.id],
+        rewardSelectionIds: item?.metafield?.value ?? []
+      }),
+    }, {
+      method: 'POST',
+    })
+  }
+
   return (
     <IndexTable
       resourceName={{ singular: 'Product', plural: 'Products' }}
@@ -112,7 +167,7 @@ export function ListProductWithPurchaseLoader() {
       ]}
       selectable={false}
     >
-      {nomralizeData(list).map((item, index) => (
+      {normalizeData(list).map((item, index) => (
         <IndexTable.Row
           id={`productVariant-${item.id}-${index}`}
           position={index}
@@ -142,16 +197,26 @@ export function ListProductWithPurchaseLoader() {
             </p>
           </IndexTable.Cell>
           <IndexTable.Cell>
-            <button
-              onClick={() => removeProduct(item.id)}
+            <div
               style={{
-                backgroundColor: "transparent",
-                border: "none",
-                cursor: "pointer",
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: '1rem'
               }}
             >
-              <Icon source={XIcon} color="base" />
-            </button>
+              <Button onClick={() => editProduct(item)}>Edit</Button>
+              <button
+                onClick={() => removeProduct(item.id)}
+                style={{
+                  backgroundColor: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <Icon source={XIcon} color="base" />
+              </button>
+            </div>
           </IndexTable.Cell>
         </IndexTable.Row>
       ))}
@@ -159,7 +224,7 @@ export function ListProductWithPurchaseLoader() {
   );
 }
 
-export const nomralizeData = (data) => {
+export const normalizeData = (data) => {
   return data.map((item) => {
     return {
       id: item?.id ?? '',

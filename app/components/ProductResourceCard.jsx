@@ -1,9 +1,9 @@
 import { ResourcePicker } from "@shopify/app-bridge-react"
-import { Box, Button, Card, Icon, Listbox, Text, Thumbnail, VerticalStack } from "@shopify/polaris"
+import { Box, Button, ButtonGroup, Card, Icon, Listbox, Text, TextField, Thumbnail, VerticalStack } from "@shopify/polaris"
 import { XIcon } from "@shopify/polaris-icons"
 import { useCallback, useState } from "react";
 
-export default function ProductResourceCard({ title = "Select products", selectionId, selection, setSelection }) {
+export default function ProductResourceCard({ title = "Select products", selectionId, selection, setSelection, enableQuantity = false}) {
   const [isPickerOpen, setIsPickerOpen] = useState({
     resourceType: 'Product',
     open: false,
@@ -33,10 +33,17 @@ export default function ProductResourceCard({ title = "Select products", selecti
 
   return <Card>
     <VerticalStack gap="3">
-      <Text as={"p"}>
+      <Text variant="headingSm" as="h2">
         {title}
       </Text>
-      <Button onClick={() => handleResourcePickerOpen('Product')}>Browse</Button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 }}>
+        <div>
+          <Button onClick={() => handleResourcePickerOpen('Product')}>Browse</Button>
+        </div>
+        <div>
+          <QuantityInput />
+        </div>
+      </div>
       <ResourcePicker
         resourceType={"Product"}
         open={isPickerOpen.open}
@@ -106,4 +113,35 @@ export default function ProductResourceCard({ title = "Select products", selecti
       }
     </VerticalStack>
   </Card>
+}
+
+function QuantityInput() {
+  const [quantity, setQuantity] = useState(1);
+
+  const handleQuantityChange = (value) => {
+    const newQuantity = parseInt(value, 10);
+    if (!isNaN(newQuantity) && newQuantity >= 0) {
+      setQuantity(newQuantity);
+    }
+  };
+
+  const incrementQuantity = () => {
+    setQuantity(quantity + 1);
+  };
+
+  const decrementQuantity = () => {
+    if (quantity > 0) {
+      setQuantity(quantity - 1);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', width: '100%'}}>
+      <ButtonGroup segmented fullWidth>
+        <Button onClick={decrementQuantity} accessibilityLabel="Decrease quantity" disabled={quantity === 1} >-</Button>
+        <TextField label="Quantity" labelHidden value={String(quantity)} onChange={handleQuantityChange} autoComplete="off" />
+        <Button onClick={incrementQuantity} accessibilityLabel="Increase quantity" >+</Button>
+      </ButtonGroup>
+    </div>
+  );
 }

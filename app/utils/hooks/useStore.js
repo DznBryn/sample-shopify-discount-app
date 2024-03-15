@@ -25,7 +25,7 @@ export const useProductWithPurchase = create((set) => ({
         return {
           ...state,
           rewardSelection: {
-            ...state.selection,
+            ...state.rewardSelection,
             ...resource,
           },
         };

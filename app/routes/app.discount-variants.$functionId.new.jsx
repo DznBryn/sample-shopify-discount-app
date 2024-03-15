@@ -31,7 +31,10 @@ import {
   PageActions,
   VerticalStack,
   Button,
-  Box
+  Box,
+  Card,
+  Text,
+  TextField
 } from "@shopify/polaris";
 import { DiscountVariant } from "../components/DiscountVariants";
 import { authenticate } from "~/shopify.server";
@@ -65,6 +68,7 @@ export const action = async ({ params, request }) => {
     const discountProducts = configuration.flatMap((config) => {
       return {
         percentage: config.percentage,
+        message: config.message,
         selection: config.selection,
       }
     })
@@ -185,7 +189,7 @@ export default function DiscountVariants() {
   const handleAddConfiguration = useCallback(() => {
     if (configurations.length <= 8) {
       const newConfiguration = {
-        percentage: "0",
+        percentage: 0,
         selection: [],
       };
       setConfigurations([...configurations, newConfiguration]);
@@ -202,7 +206,7 @@ export default function DiscountVariants() {
       setConfigurations(updateConfigurations);
     }
   }, [configurations]);
-  
+
   useEffect(() => {
     if (actionData?.errors?.length === 0 && actionData?.redirect === true) {
       redirect.dispatch(Redirect.Action.ADMIN_SECTION, {
@@ -223,6 +227,7 @@ export default function DiscountVariants() {
       appliesOncePerCustomer,
       startDate,
       endDate,
+      message,
     },
     submit,
   } = useForm({
@@ -243,9 +248,11 @@ export default function DiscountVariants() {
       appliesOncePerCustomer: useField(false),
       startDate: useField(todaysDate),
       endDate: useField(null),
+      message: useField(""),
       configuration: [
         {
           percentage: useField("0"),
+          message: useField("0"),
           selection: useField([]),
         }
       ],
@@ -264,6 +271,7 @@ export default function DiscountVariants() {
         configuration: configurations.map((config) => {
           return {
             percentage: parseFloat(config.percentage),
+            message: form.discountMethod === 'Automatic' ? form.discountTitle : form.message ?? "",
             selection: config.selection.map((selection) => {
               return {
                 id: selection.id,
@@ -326,6 +334,27 @@ export default function DiscountVariants() {
                 discountCode={discountCode}
                 discountMethod={discountMethod}
               />
+              {
+                discountMethod.value === DiscountMethod.Code && (
+                  <Card>
+                    <VerticalStack gap="3">
+                      <Text variant="headingMd" as="h2">
+                        Promotion label
+                      </Text>
+                      <div>
+                        <TextField
+                          label="Promotion Label"
+                          autoComplete="on"
+                          labelHidden
+                          placeholder=""
+                          {...message}
+                        />
+                        <div className="Polaris-Labelled__HelpText"><span className="Polaris-Text--root Polaris-Text--break Polaris-Text--subdued">Customers will see this in their cart and at checkout.</span></div>
+                      </div>
+                    </VerticalStack>
+                  </Card>
+                )
+              }
               {
                 configurations.map((config, index) => {
                   return <DiscountVariant key={`dv-${index}`} configuration={config} removeConfiguration={removeConfiguration} configurations={configurations} configIndex={index} onChange={handleUpdateConfiguration} />

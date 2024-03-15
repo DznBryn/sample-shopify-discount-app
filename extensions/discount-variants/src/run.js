@@ -26,6 +26,7 @@ export function run(input) {
    * @type {[{
    *   quantity: number
    *   percentage: number
+   *   message: String
    *   selection: {
    *    id: string
    *   variants: {id: String}[]
@@ -54,10 +55,11 @@ export function run(input) {
         },
       }))
     );
-
+    console.error('selectedVariants', data.message)
     return {
       quantity: data.quantity,
       percentage: data.percentage,
+      message: data?.message ?? '',
       selectedVariants,
     };
   }
@@ -73,7 +75,7 @@ export function run(input) {
   const discounts = results.map((result) => {
     return {
       targets: result.selectedVariants,
-      message: `${result.percentage}% off`,
+      message: `${result?.message ?? ''} ${result.percentage}% off`,
       value: {
         percentage: {
           value: result.percentage.toString(),
@@ -88,6 +90,7 @@ export function run(input) {
       return EMPTY_DISCOUNT;
     }
   });
+  
 
   return {
     discounts,

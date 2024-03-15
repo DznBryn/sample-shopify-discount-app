@@ -2,6 +2,7 @@
 
 client_id = "34a42b96b110a1fbafa817f89660851a"
 name = "Service Hub"
+handle = "selfservice"
 application_url = "https://shopify-discount-app-one.vercel.app/"
 embedded = true
 
@@ -16,9 +17,9 @@ scopes = "write_products,read_products,write_discounts,write_cart_transforms"
 
 [auth]
 redirect_urls = [
-  "https://shopify-discount-app-one.vercel.app//auth/callback",
-  "https://shopify-discount-app-one.vercel.app//auth/shopify/callback",
-  "https://shopify-discount-app-one.vercel.app//api/auth/callback"
+  "https://shopify-discount-app-one.vercel.app/auth/callback",
+  "https://shopify-discount-app-one.vercel.app/auth/shopify/callback",
+  "https://shopify-discount-app-one.vercel.app/api/auth/callback"
 ]
 
 [webhooks]
