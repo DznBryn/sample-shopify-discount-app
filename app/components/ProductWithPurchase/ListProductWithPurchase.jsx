@@ -92,7 +92,7 @@ export function ListProductWithPurchaseLoader({ handleToggle }) {
 
   useEffect(() => {
     if (getProductVariant?.data?.data) {
-      const { selectionData: selection, rewardSelectionData } = getProductVariant?.data?.data
+      const { selectionData: selection, rewardSelectionData, quantity } = getProductVariant?.data?.data
 
       const rewardSelectionList = []
       const selectionList = []
@@ -124,10 +124,11 @@ export function ListProductWithPurchaseLoader({ handleToggle }) {
       }
       const rewardSelections = {
         selectionId: '',
+        quantity,
         selection: rewardSelectionList
       }
 
-      handleToggle('editRewards', selectionData, rewardSelections)
+      handleToggle('editRewards', selectionData, rewardSelections, quantity)
     }
   }, [getProductVariant.state])
 
@@ -145,9 +146,10 @@ export function ListProductWithPurchaseLoader({ handleToggle }) {
   const editProduct = async (item) => {
     return await getProductVariant.submit({
       formAction: 'GET_PRODUCT_VARIANTS',
+      quantity: item?.metafield?.value?.quantity ?? 1,
       ids: JSON.stringify({
         selectionIds: [item.id],
-        rewardSelectionIds: item?.metafield?.value ?? []
+        rewardSelectionIds: item?.metafield?.value?.variants ?? []
       }),
     }, {
       method: 'POST',
@@ -163,6 +165,7 @@ export function ListProductWithPurchaseLoader({ handleToggle }) {
         { title: 'Name' },
         { title: 'Prices' },
         { title: 'Purchase Promotion' },
+        { title: 'Quantity' },
         { title: '' }
       ]}
       selectable={false}
@@ -193,7 +196,12 @@ export function ListProductWithPurchaseLoader({ handleToggle }) {
           </IndexTable.Cell>
           <IndexTable.Cell>
             <p>
-              with {item.metafield?.value.length} {item.metafield?.value.length === 1 ? 'product' : 'products'}
+              with {item.metafield?.value?.variants?.length} {item.metafield?.value?.variants?.length === 1 ? 'product' : 'products'}
+            </p>
+          </IndexTable.Cell>
+          <IndexTable.Cell>
+            <p>
+              {item.metafield?.value?.quantity}
             </p>
           </IndexTable.Cell>
           <IndexTable.Cell>

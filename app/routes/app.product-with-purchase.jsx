@@ -51,7 +51,7 @@ export async function action({ request }) {
             const mergeRewardSelection = rewardSelection.flatMap(product => product?.variants?.flatMap(variant => variant.id));
             return ({
               id: variant.id,
-              value: JSON.stringify(mergeRewardSelection)
+              value: mergeRewardSelection
             })
           });
 
@@ -63,8 +63,11 @@ export async function action({ request }) {
                     "key": "component_reference",
                     "namespace": "custom",
                     "ownerId": variant.id,
-                    "value": variant.value,
-                    "type": "list.variant_reference",
+                    "value": JSON.stringify({
+                      quantity: formData.get('quantity'),
+                      variants: variant.value
+                    }),
+                    "type": "json",
                   }
                 ]
               }
@@ -77,7 +80,6 @@ export async function action({ request }) {
             }
 
             if (updateMetafieldsJson?.data?.metafieldsSet?.metafields?.length > 0) {
-              console.log('updateMetafieldsJson', updateMetafieldsJson)
               result.data.push(updateMetafieldsJson.data?.metafieldsSet.metafields);
             }
           }
@@ -95,7 +97,7 @@ export async function action({ request }) {
         return json({ data: products, errors: [] });
       }
 
-      return json({ data: [], errors: result.data.metafieldsSet.userErrors ?? [] });
+      return json({ data: [], errors: result.data?.metafieldsSet?.userErrors ?? [] });
     }
 
     if (formAction === 'DELETE_PRODUCT_WITH_PURCHASE') {
@@ -142,7 +144,8 @@ export async function action({ request }) {
       return json({
         data: {
           selectionData,
-          rewardSelectionData
+          rewardSelectionData,
+          quantity: formData.get('quantity')
         }, errors: []
       });
     }
@@ -205,16 +208,19 @@ export default function ProductWithPurchase() {
 
   const handleToggle = useCallback(async (component = "createRewards",
     defaultSelection,
-    defaultRewardSelection
+    defaultRewardSelection,
+    quantity
   ) => {
 
     defaultSelection ? selection.setSelection(defaultSelection) : selection.setSelection({
       selectionId: "",
+      quantity: 1,
       selection: [],
     });
 
-    defaultRewardSelection ? rewardSelection.setSelection(defaultRewardSelection) : rewardSelection.setSelection({
+    defaultRewardSelection ? rewardSelection.setSelection({ ...defaultRewardSelection, quantity }) : rewardSelection.setSelection({
       selectionId: "",
+      quantity: 1,
       selection: [],
     });
 
@@ -229,15 +235,18 @@ export default function ProductWithPurchase() {
     await fetcher.submit({
       formAction: 'CREATE_PRODUCT_WITH_PURCHASE',
       selection: JSON.stringify(selection.selection),
-      rewardSelection: JSON.stringify(rewardSelection.selection)
+      rewardSelection: JSON.stringify(rewardSelection.selection),
+      quantity: rewardSelection.quantity
     }, { method: 'POST' })
 
     selection.setSelection({
       selectionId: "",
+      quantity: 1,
       selection: [],
     });
     rewardSelection.setSelection({
       selectionId: "",
+      quantity: 1,
       selection: [],
     });
     return handleToggle("");

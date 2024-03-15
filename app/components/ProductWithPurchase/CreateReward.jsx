@@ -10,7 +10,7 @@ export default function CreateReward() {
     <Layout.Section secondary>
       <VerticalStack gap="3">
         <ProductResourceCard selectionId={selection.selectionId} selection={selection.selection} setSelection={selection.setSelection} />
-        <ProductResourceCard title="Select free products for selected products" selectionId={rewardSelection.selectionId} selection={rewardSelection.selection} setSelection={rewardSelection.setSelection} />
+        <ProductResourceCard title="Select free products for selected products" selectionId={rewardSelection.selectionId} selection={rewardSelection.selection} setSelection={rewardSelection.setSelection} enableQuantity/>
       </VerticalStack>
     </Layout.Section>
   );

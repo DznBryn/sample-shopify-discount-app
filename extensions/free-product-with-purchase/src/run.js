@@ -38,21 +38,23 @@ function getMergeCartOperations(cart) {
 
     let componentReferences = getComponentReferences(variant);
 
-    if (componentReferences.length === 0) continue;
+    if (componentReferences.variants.length === 0) continue;
 
-    let expandRelationship = componentReferences.map((reference, index) => {
-      return {
-        merchandiseId: reference,
-        quantity: 1,
-        price: {
-          adjustment: {
-            fixedPricePerUnit: {
-              amount: index === 0 ? line.cost.amountPerQuantity.amount : 0,
+    let expandRelationship = componentReferences.variants.map(
+      (reference, index) => {
+        return {
+          merchandiseId: reference,
+          quantity: Number(componentReferences?.quantity) ?? 1,
+          price: {
+            adjustment: {
+              fixedPricePerUnit: {
+                amount: index === 0 ? line.cost.amountPerQuantity.amount : 0,
+              },
             },
           },
-        },
-      };
-    });
+        };
+      }
+    );
     
     let expandOps = {
       cartLineId: line.id,
@@ -68,8 +70,14 @@ function getMergeCartOperations(cart) {
 
 function getComponentReferences(variant) {
   if (variant.component_reference) {
-    return JSON.parse(variant.component_reference.value);
+    return {
+      quantity: JSON.parse(variant.component_reference.value).quantity,
+      variants: JSON.parse(variant.component_reference.value).variants,
+    };
   }
 
-  return [];
+  return {
+    quantity: 1,
+    variants: [],
+  };
 }

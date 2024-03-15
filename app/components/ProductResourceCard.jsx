@@ -2,12 +2,14 @@ import { ResourcePicker } from "@shopify/app-bridge-react"
 import { Box, Button, ButtonGroup, Card, Icon, Listbox, Text, TextField, Thumbnail, VerticalStack } from "@shopify/polaris"
 import { XIcon } from "@shopify/polaris-icons"
 import { useCallback, useState } from "react";
+import { useProductWithPurchase } from "~/utils/hooks/useStore";
 
-export default function ProductResourceCard({ title = "Select products", selectionId, selection, setSelection, enableQuantity = false}) {
+export default function ProductResourceCard({ title = "Select products", selectionId, selection, setSelection, enableQuantity = false }) {
   const [isPickerOpen, setIsPickerOpen] = useState({
     resourceType: 'Product',
     open: false,
   });
+
 
   const handleProductSelect = (resource) => {
     if (resource) setSelection({ selectionId: resource?.id ?? '', selection: resource?.selection ?? [] });
@@ -36,13 +38,16 @@ export default function ProductResourceCard({ title = "Select products", selecti
       <Text variant="headingSm" as="h2">
         {title}
       </Text>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 }}>
         <div>
           <Button onClick={() => handleResourcePickerOpen('Product')}>Browse</Button>
         </div>
-        <div>
-          <QuantityInput />
-        </div>
+        {
+          enableQuantity && (<div>
+            <QuantityInput />
+          </div>)
+        }
       </div>
       <ResourcePicker
         resourceType={"Product"}
@@ -116,29 +121,30 @@ export default function ProductResourceCard({ title = "Select products", selecti
 }
 
 function QuantityInput() {
-  const [quantity, setQuantity] = useState(1);
+
+  const { quantity, setSelection } = useProductWithPurchase(state => state.rewardSelection);
 
   const handleQuantityChange = (value) => {
     const newQuantity = parseInt(value, 10);
     if (!isNaN(newQuantity) && newQuantity >= 0) {
-      setQuantity(newQuantity);
+      setSelection({ quantity: newQuantity });
     }
   };
 
   const incrementQuantity = () => {
-    setQuantity(quantity + 1);
+    setSelection({ quantity: parseInt(quantity) + 1 });
   };
 
   const decrementQuantity = () => {
     if (quantity > 0) {
-      setQuantity(quantity - 1);
+      setSelection({ quantity: parseInt(quantity) - 1 });
     }
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', width: '100%'}}>
+    <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
       <ButtonGroup segmented fullWidth>
-        <Button onClick={decrementQuantity} accessibilityLabel="Decrease quantity" disabled={quantity === 1} >-</Button>
+        <Button onClick={decrementQuantity} accessibilityLabel="Decrease quantity" disabled={parseInt(quantity) === 1} >-</Button>
         <TextField label="Quantity" labelHidden value={String(quantity)} onChange={handleQuantityChange} autoComplete="off" />
         <Button onClick={incrementQuantity} accessibilityLabel="Increase quantity" >+</Button>
       </ButtonGroup>

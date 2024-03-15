@@ -5,6 +5,7 @@ export const useProductWithPurchase = create((set) => ({
   selection: {
     selectionId: "",
     selection: [],
+    quantity: 1,
     setSelection: (resource) => {
       set((state) => {
         return {
@@ -20,6 +21,7 @@ export const useProductWithPurchase = create((set) => ({
   rewardSelection: {
     selectionId: "",
     selection: [],
+    quantity: 1,
     setSelection: (resource) => {
       set((state) => {
         return {
